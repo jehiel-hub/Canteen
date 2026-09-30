@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="login.css">
+    <title>Login</title>
+</head>
+<body>
+    <main class="login-shell">
+        <form class="login-panel" id="login-form">
+            <p class="eyebrow">NU-CANTEEN</p>
+            <h1>Welcome back</h1>
+            <p class="intro">Sign in to continue to your account.</p>
+
+            <div class="user-role" aria-label="Choose user type">
+                <label class="role-option">
+                    <input type="radio" name="role" value="student" checked>
+                    <span>Students</span>
+                </label>
+                <label class="role-option">
+                    <input type="radio" name="role" value="admin">
+                    <span>Admin</span>
+                </label>
+            </div>
+
+            <div class="form-field">
+                <label for="username">Username</label>
+                <input id="username" name="username" type="text" placeholder="Your name" autocomplete="username" required>
+            </div>
+
+            <div class="form-field">
+                <label for="password">Password</label>
+                <input id="password" name="password" type="password" placeholder="Enter your password" autocomplete="current-password" required>
+            </div>
+
+            <p class="login-error" id="login-error" role="alert" hidden>Invalid username or password.</p>
+            <button type="submit">Sign in <span aria-hidden="true">&#8594;</span></button>
+        </form>
+    </main>
+    <script>
+        document.getElementById("login-form").addEventListener("submit", function (event) {
+            event.preventDefault();
+
+            const username = document.getElementById("username").value.trim();
+            const password = document.getElementById("password").value;
+            const selectedRole = document.querySelector('input[name="role"]:checked').value;
+
+            if (selectedRole === "student") {
+                const validUsernames = ["Byiringiro Ishimwe Jehiel", "Nkurunziza Keyvan", "Manzi Evans"];
+
+                if (validUsernames.includes(username) && password === "676967") {
+                    window.location.href = "Home.html";
+                    return;
+                }
+            }
+
+            if (selectedRole === "admin") {
+                if (username === "admin" && password === "admin123") {
+                    window.location.href = "admin.html";
+                    return;
+                }
+            }
+
+            document.getElementById("login-error").hidden = false;
+        });
+    </script>
+</body>
+</html>

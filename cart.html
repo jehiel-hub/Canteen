@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="home.css">
+    <link rel="stylesheet" href="cart.css">
+    <title>Cart</title>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="logo"><a href="Home.html">Nu-Canteen</a></div>
+        <ul class="nav-links">
+            <li><a href="Home.html">Home</a></li>
+            <li><a href="#">History</a></li>
+        </ul>
+        <a href="cart.html" class="btn" aria-label="Shopping cart">Cart</a>
+    </nav>
+
+    <main class="cart-page">
+        <header class="cart-heading">
+            <div>
+                <p class="cart-eyebrow">ORDER REVIEW</p>
+                <h1>Your cart</h1>
+            </div>
+            <p class="cart-count" id="cartItemCount" aria-live="polite">0 items</p>
+        </header>
+
+        <div class="cart-layout">
+            <section class="cart-card cart-products" aria-labelledby="cart-items-heading">
+                <div class="cart-panel-heading">
+                    <h2 id="cart-items-heading">Items</h2>
+                    <button class="clear-cart-button" id="clearCartButton" type="button" hidden>Clear cart</button>
+                </div>
+                <ul id="cartItems" class="cart-list" aria-live="polite"></ul>
+            </section>
+
+            <aside class="cart-card cart-summary-panel" aria-labelledby="summary-heading">
+                <h2 id="summary-heading">Order summary</h2>
+                <div class="summary-row">
+                    <span>Items</span>
+                    <span id="summaryItemCount">0</span>
+                </div>
+                <div class="summary-row cart-total-row">
+                    <span>Total</span>
+                    <strong id="cartTotal">0 RWF</strong>
+                </div>
+                <a class="checkout-button" id="checkoutButton" href="checkout.html" aria-disabled="true" tabindex="-1">
+                    Proceed to checkout <span aria-hidden="true">&#8594;</span>
+                </a>
+                <a class="continue-shopping" href="Home.html">Continue shopping</a>
+            </aside>
+        </div>
+    </main>
+
+    <script>
+        const cartKey = 'nu-canteen-cart';
+
+        const productCatalog = {
+            pringles: { image: 'images/pringles.jpg', price: 5000 },
+            mirinda: { image: 'images/mirinda.jpg', price: 1200 },
+            didoz: { image: 'images/didoz.jpg', price: 200 },
+            'bagiya': { image: 'images/inuma.jpg', price: 1200 }
+        };
+        const imageFiles = {
+            'pringles.jpg': 'images/pringles.jpg',
+            'mirinda.jpg': 'images/mirinda.jpg',
+            'didoz.jpg': 'images/didoz.jpg',
+            'inuma.jpg': 'images/inuma.jpg'
+        };
+
+        function getCart() {
+            try {
+                const savedCart = JSON.parse(localStorage.getItem(cartKey) || '[]');
+                if (!Array.isArray(savedCart)) return [];
+
+                return savedCart.filter(item => item && typeof item.name === 'string')
+                    .map(item => {
+                        const product = productCatalog[item.name.trim().toLowerCase()];
+                        const savedImageName = String(item.image || '').split(/[\\/]/).pop().split(/[?#]/)[0].toLowerCase();
+                        const quantity = Math.max(1, Math.floor(Number(item.quantity) || 1));
+
+                        return {
+                            ...item,
+                            price: product?.price ?? Math.max(0, Number(item.price) || 0),
+                            quantity,
+                            image: product?.image || imageFiles[savedImageName] || ''
+                        };
+                    });
+            } catch {
+                return [];
+            }
+        }
+
+        function formatPrice(value) {
+            return `${Math.round(value).toLocaleString('en-US')} RWF`;
+        }
+
+        function escapeHtml(value) {
+            return String(value).replace(/[&<>"']/g, character => ({
+                '&': '&amp;',
+                '<': '&lt;',
+                '>': '&gt;',
+                '"': '&quot;',
+                "'": '&#39;'
+            })[character]);
+        }
+
+        function renderCart() {
+            const cart = getCart();
+            const cartItems = document.getElementById('cartItems');
+            const itemCount = cart.reduce((sum, item) => sum + item.quantity, 0);
+            const total = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+
+            if (cart.length > 0) localStorage.setItem(cartKey, JSON.stringify(cart));
+
+            document.getElementById('cartItemCount').textContent = `${itemCount} ${itemCount === 1 ? 'item' : 'items'}`;
+            document.getElementById('summaryItemCount').textContent = itemCount;
+            document.getElementById('cartTotal').textContent = formatPrice(total);
+            document.getElementById('clearCartButton').hidden = cart.length === 0;
+
+            const checkoutButton = document.getElementById('checkoutButton');
+            checkoutButton.setAttribute('aria-disabled', String(cart.length === 0));
+            checkoutButton.tabIndex = cart.length === 0 ? -1 : 0;
+
+            if (cart.length === 0) {
+                cartItems.innerHTML = `
+                    <li class="cart-empty-state">
+                        <span class="empty-mark" aria-hidden="true">+</span>
+                        <h3>Your cart is empty</h3>
+                        <p>Pick something tasty from the canteen to get started.</p>
+                        <a href="Home.html">Browse products</a>
+                    </li>`;
+                return;
+            }
+
+            cartItems.innerHTML = cart.map((item, index) => `
+                <li class="cart-item">
+                    <div class="cart-product-image">
+                        <span class="image-fallback" aria-hidden="true">${escapeHtml(item.name.slice(0, 1).toUpperCase())}</span>
+                        ${item.image ? `<img src="${item.image}" alt="${escapeHtml(item.name)}" loading="lazy">` : ''}
+                    </div>
+                    <div class="cart-item-text">
+                        <h3>${escapeHtml(item.name)}</h3>
+                        <p>${formatPrice(item.price)} each</p>
+                        <div class="quantity-control" aria-label="Quantity for ${escapeHtml(item.name)}">
+                            <button type="button" data-action="decrease" data-index="${index}" aria-label="Decrease ${escapeHtml(item.name)} quantity">&#8722;</button>
+                            <span>${item.quantity}</span>
+                            <button type="button" data-action="increase" data-index="${index}" aria-label="Increase ${escapeHtml(item.name)} quantity">+</button>
+                        </div>
+                    </div>
+                    <div class="cart-item-side">
+                        <strong>${formatPrice(item.price * item.quantity)}</strong>
+                        <button class="remove-item-button" type="button" data-action="remove" data-index="${index}">Remove</button>
+                    </div>
+                </li>
+            `).join('');
+
+            cartItems.querySelectorAll('.cart-product-image img').forEach(image => {
+                image.addEventListener('error', () => image.remove(), { once: true });
+            });
+        }
+
+        document.getElementById('cartItems').addEventListener('click', event => {
+            const button = event.target.closest('button[data-action]');
+            if (!button) return;
+
+            const cart = getCart();
+            const index = Number(button.dataset.index);
+            if (!Number.isInteger(index) || !cart[index]) return;
+
+            if (button.dataset.action === 'increase') cart[index].quantity += 1;
+            if (button.dataset.action === 'decrease') cart[index].quantity -= 1;
+            if (button.dataset.action === 'remove' || cart[index].quantity < 1) cart.splice(index, 1);
+
+            localStorage.setItem(cartKey, JSON.stringify(cart));
+            renderCart();
+        });
+
+        document.getElementById('clearCartButton').addEventListener('click', () => {
+            localStorage.removeItem(cartKey);
+            renderCart();
+        });
+
+        document.getElementById('checkoutButton').addEventListener('click', event => {
+            if (getCart().length === 0) event.preventDefault();
+        });
+
+        window.addEventListener('storage', renderCart);
+        renderCart();
+    </script>
+</body>
+</html>

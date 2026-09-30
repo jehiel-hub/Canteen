@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="home.css">
+    <link rel="stylesheet" href="Checkout.css">
+    <title>Checkout</title>
+</head>
+
+<body>
+    <nav class="navbar">
+        <div class="logo"><a href="Home.html">Nu-Canteen</a></div>
+        <ul class="nav-links">
+            <li><a href="Home.html">Home</a></li>
+            <li><a href="#">History</a></li>
+        </ul>
+        <a href="cart.html" class="btn" aria-label="Shopping cart">Cart</a>
+    </nav>
+
+    <main class="checkout-page">
+        <section class="checkout-card">
+            <h1>Checkout</h1>
+            <ul id="checkoutItems" class="checkout-list"></ul>
+
+            <div class="checkout-summary">
+                <div class="summary-row">
+                    <span>Total</span>
+                    <strong id="checkoutTotal">0 RWF</strong>
+                </div>
+            </div>
+
+            <button type="button" class="checkout-btn">Confirm Order</button>
+        </section>
+    </main>
+
+    <script>
+        const cartKey = 'nu-canteen-cart';
+
+        function getCart() {
+            return JSON.parse(localStorage.getItem(cartKey) || '[]');
+        }
+
+        function renderCheckout() {
+            const cart = getCart();
+            const list = document.getElementById('checkoutItems');
+            const totalNode = document.getElementById('checkoutTotal');
+
+            if (!list || !totalNode) return;
+
+            if (cart.length === 0) {
+                list.innerHTML = '<li class="empty-state">Your cart is empty.</li>';
+                totalNode.textContent = '0 RWF';
+                document.querySelector('.checkout-btn').disabled = true;
+                return;
+            }
+
+            list.innerHTML = cart.map((item, index) => `
+                <li class="checkout-item">
+                    <img src="${item.image}" alt="${item.name}">
+                    <div class="checkout-item-text">
+                        <h3>${item.name}</h3>
+                        <p>${item.price}RWF each</p>
+                        <span>Qty: ${item.quantity}</span>
+                    </div>
+                    <div class="checkout-item-actions">
+                        <strong>${item.price * item.quantity}RWF</strong>
+                        <button class="remove-checkout-item" type="button" data-index="${index}" aria-label="Remove ${item.name} from checkout">Remove</button>
+                    </div>
+                </li>
+            `).join('');
+
+            const total = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+            totalNode.textContent = `${total} RWF`;
+            document.querySelector('.checkout-btn').disabled = false;
+        }
+
+        document.getElementById('checkoutItems').addEventListener('click', event => {
+            const removeButton = event.target.closest('.remove-checkout-item');
+            if (!removeButton) return;
+
+            const cart = getCart();
+            const index = Number(removeButton.dataset.index);
+            if (!Number.isInteger(index) || !cart[index]) return;
+
+            cart.splice(index, 1);
+            localStorage.setItem(cartKey, JSON.stringify(cart));
+            renderCheckout();
+        });
+
+        document.querySelector('.checkout-btn')?.addEventListener('click', () => {
+            const cart = getCart();
+
+            if (!cart.length) {
+                alert('Your cart is empty.');
+                return;
+            }
+
+            const code = `NU-${Math.random().toString(36).slice(2, 8).toUpperCase()}`;
+            const expiresAt = Date.now() + (8 * 60 * 60 * 1000);
+
+            localStorage.setItem('nu-canteen-order', JSON.stringify({
+                code,
+                expiresAt,
+                total: cart.reduce((sum, item) => sum + (item.price * item.quantity), 0)
+            }));
+
+            localStorage.removeItem(cartKey);
+            window.location.href = 'success.html';
+        });
+
+        renderCheckout();
+    </script>
+</body>
+</html>

@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="success.css">
+    <title>Order Confirmed</title>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="logo"><a href="Home.html">Nu-Canteen</a></div>
+        <ul class="nav-links">
+            <li><a href="Home.html">Home</a></li>
+            <li><a href="#">History</a></li>
+        </ul>
+        <a href="cart.html" class="btn" aria-label="Shopping cart">Cart</a>
+    </nav>
+
+    <main class="success-page">
+        <section class="success-card">
+            <div class="success-badge">✓</div>
+            <h1>Thank you!</h1>
+            <p>Your order has been placed successfully.</p>
+
+            <div class="code-box">
+                <span class="code-label">One-time code</span>
+                <strong id="orderCode">--</strong>
+                <small id="expiresAt">Expires in 8 hours</small>
+            </div>
+
+            <a href="Home.html" class="home-btn">Back to Home</a>
+        </section>
+    </main>
+
+    <script>
+        const orderData = JSON.parse(localStorage.getItem('nu-canteen-order') || '{}');
+        const orderCode = document.getElementById('orderCode');
+        const expiresAt = document.getElementById('expiresAt');
+
+        if (orderData.code) {
+            const expiration = Number(orderData.expiresAt || 0);
+            const now = Date.now();
+
+            orderCode.textContent = orderData.code;
+
+            if (expiration && now < expiration) {
+                const timeLeft = new Date(expiration).toLocaleString();
+                expiresAt.textContent = `Valid until ${timeLeft}`;
+            } else {
+                expiresAt.textContent = 'This code has expired.';
+            }
+        } else {
+            orderCode.textContent = 'N/A';
+            expiresAt.textContent = 'No valid order found.';
+        }
+    </script>
+</body>
+</html>

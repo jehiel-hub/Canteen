@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="home.css">
+    <title>Home</title>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="logo"><a href="Home.html">Nu-Canteen</a></div>
+        <ul class="nav-links">
+            <li><a href="Home.html">Home</a></li>
+            <li><a href="#">History</a></li>
+        </ul>
+        <div class="nav-actions">
+            <div class="balance-box"><span>Balance:</span> 20.000RWF</div>
+            <a href="cart.html" class="btn" aria-label="Shopping cart">Cart</a>
+        </div>
+    </nav>
+
+    <div class="hero">
+        <h1>Welcome back, Jehiel</h1>
+        <p>Choose your favorite snacks and drinks from our canteen. Every item you add will appear here so you can review your selections before checkout.</p>
+    </div>
+
+    <div class="ours">
+        <h1>Our Products</h1>
+        <p>Discover our range of products</p>
+    </div>
+
+    <main class="main-shel">
+
+        <section class="products-grid">
+            <article class="era" data-name="Pringles" data-price="5000" data-image="images/pringles.jpg">
+                <img src="images/pringles.jpg" alt="Pringles">
+                <h2>Pringles</h2>
+                <p>5000RWF</p>
+                <div class="card-actions">
+                    <button class="add-btn">Add to Cart</button>
+                    <button class="buy-btn">Buy now</button>
+                </div>
+            </article>
+
+            <article class="era" data-name="Mirinda" data-price="1200" data-image="images/mirinda.jpg">
+                <img src="images/mirinda.png" alt="Mirinda">
+                <h2>Mirinda</h2>
+                <p>1200RWF</p>
+                <div class="card-actions">
+                    <button class="add-btn">Add to Cart</button>
+                    <button class="buy-btn">Buy now</button>
+                </div>
+            </article>
+
+            <article class="era" data-name="Didoz" data-price="200" data-image="images/didoz.jpg">
+                <img src="images/didoz.jpg" alt="Didoz">
+                <h2>Didoz</h2>
+                <p>200RWF</p>
+                <div class="card-actions">
+                    <button class="add-btn">Add to Cart</button>
+                    <button class="buy-btn">Buy now</button>
+                </div>
+            </article>         
+            
+            
+            <article class="era" data-name="Bagiya" data-price="1200" data-image="images/inuma.jpg">
+                <img src="images/inuma.jpg" alt="Bagiya">
+                <h2>Bagiya</h2>
+                <p>1200RWF</p>
+                <div class="card-actions">
+                    <button class="add-btn">Add to Cart</button>
+                    <button class="buy-btn">Buy now</button>
+                </div>
+            </article>
+            
+            <article class="era" data-name="Mirinda" data-price="1200" data-image="images/mirinda.jpg">
+                <img src="images/mirinda.png" alt="Mirinda">
+                <h2>Mirinda</h2>
+                <p>1200RWF</p>
+                <div class="card-actions">
+                    <button class="add-btn">Add to Cart</button>
+                    <button class="buy-btn">Buy now</button>
+                </div>
+            </article>            
+
+
+        </section>
+
+
+            </div>
+        </aside>
+    </main>
+
+    <div class="toast-container" aria-live="polite" aria-atomic="true"></div>
+
+    <script>
+        const cartKey = 'nu-canteen-cart';
+
+        function showToast(message) {
+            const container = document.querySelector('.toast-container');
+            if (!container) return;
+
+            const toast = document.createElement('div');
+            toast.className = 'toast';
+            toast.textContent = message;
+            toast.setAttribute('role', 'button');
+            toast.setAttribute('tabindex', '0');
+            toast.addEventListener('click', () => {
+                window.location.href = 'cart.html';
+            });
+            toast.addEventListener('keydown', (event) => {
+                if (event.key === 'Enter' || event.key === ' ') {
+                    event.preventDefault();
+                    window.location.href = 'cart.html';
+                }
+            });
+
+            container.appendChild(toast);
+
+            setTimeout(() => {
+                toast.remove();
+            }, 1800);
+        }
+
+        function getCart() {
+            return JSON.parse(localStorage.getItem(cartKey) || '[]');
+        }
+
+        function saveCart(items) {
+            localStorage.setItem(cartKey, JSON.stringify(items));
+        }
+
+        function addToCart(product) {
+            const cart = getCart();
+            const existingProduct = cart.find(item => item.name === product.name);
+
+            if (existingProduct) {
+                existingProduct.quantity += 1;
+            } else {
+                cart.push({ ...product, quantity: 1 });
+            }
+
+            saveCart(cart);
+            renderCart();
+            showToast(`${product.name} added to cart!`);
+        }
+
+        function renderCart() {
+            const cart = getCart();
+            const list = document.getElementById('selectedItems');
+            const totalNode = document.getElementById('selectedTotal');
+
+            if (!list || !totalNode) return;
+
+            if (cart.length === 0) {
+                list.innerHTML = '<li class="empty-state">No product selected yet.</li>';
+                totalNode.textContent = '0 RWF';
+                return;
+            }
+
+            list.innerHTML = cart.map(item => `
+                <li class="selected-item">
+                    <div>
+                        <span class="item-name">${item.name}</span>
+                        <small>Qty: ${item.quantity}</small>
+                    </div>
+                    <span class="item-price">${item.price * item.quantity}RWF</span>
+                </li>
+            `).join('');
+
+            const total = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+            totalNode.textContent = `${total} RWF`;
+        }
+
+        document.querySelectorAll('.add-btn').forEach(button => {
+            button.addEventListener('click', () => {
+                const card = button.closest('.era');
+                const product = {
+                    name: card.querySelector('h2')?.textContent || card.dataset.name,
+                    price: Number(card.dataset.price),
+                    image: card.querySelector('img')?.src || card.dataset.image
+                };
+
+                addToCart(product);
+            });
+        });
+
+        document.querySelectorAll('.buy-btn').forEach(button => {
+            button.addEventListener('click', () => {
+                const card = button.closest('.era');
+                const product = {
+                    name: card.querySelector('h2')?.textContent || card.dataset.name,
+                    price: Number(card.dataset.price),
+                    image: card.querySelector('img')?.src || card.dataset.image
+                };
+
+                addToCart(product);
+                window.location.href = 'checkout.html';
+            });
+        });
+
+        renderCart();
+    </script>
+</body>
+</html>
